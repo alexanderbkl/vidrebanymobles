@@ -12,7 +12,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <HashRouter>
       <Routes>
-        <Route path="/home" element={<App />} />
+        <Route path="/" element={<App />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
       </HashRouter>
