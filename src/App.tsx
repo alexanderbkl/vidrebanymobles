@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 
 import Born_120_Fresno from './assets/born120/Born120Fresno.jpg'
 import Born_120_Neva from './assets/born120/Born120Neva.jpg'

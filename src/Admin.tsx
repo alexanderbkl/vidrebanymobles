@@ -6,16 +6,16 @@ import Test_120_Olmo from './assets/born120/Test120Olmo.jpg'
 import './App.css'
 import { Formik, Field, Form, useFormikContext, FieldArray } from 'formik'
 
-import { getDatabase, ref, set, update } from 'firebase/database'
+import { get, getDatabase, ref, set, update } from 'firebase/database'
 import { uploadBytes, ref as refStorage, getDownloadURL, getStorage } from "firebase/storage";
 
 import { app } from './firebase'
 import FileUpload from './utils/FileUpload'
-import { ModeloMueble } from './types'
+import { ModeloMueble, SerieMueble } from './types'
 
 const db = getDatabase(app)
 
-const muebles = [
+const muebles2 = [
     {
         id: 1,
         serie: 'Born 120',
@@ -45,48 +45,75 @@ const muebles = [
     },
 ]
 
-
-
-
-//add first mueble of muebles to firebase, the parent key identifies with id of the moble and child has all the content of the moble
-const addMuebleToFirebase = async (serieModel: string) => {
-    await update(ref(db, '/muebles/' + muebles.length), {
-        id: muebles.length,
-        serie: serieModel,
-    })
-
-    //add a new moble to firebase
+//get all muebles and models from firebase
+const getMueblesFromFirebase = async () => {
+    const mueblesRef = ref(db, '/muebles');
+    const mueblesSnapshot = await get(mueblesRef);
+    if (mueblesSnapshot.exists()) {
+        return mueblesSnapshot.val()
+    } else {
+        console.log("No data available");
+        return null
+    }
 }
 
-//send to firebase storage even if there are no imports
-const addRenderToStorage = async (file: File) => {
-    const storage = refStorage(getStorage(), 'images/' + file.name);
-    await uploadBytes(storage, file).then((snapshot) => {
-        console.log('Uploaded a blob or file!');
-    });
-}
+
+
+
+
+
 
 
 function Admin() {
     const [muebleSerieId, setMuebleSerieId] = useState(0)
     const [muebleModeloId, setMuebleModeloId] = useState(0)
-    const ref = useRef(null);
+    const [muebles, setMuebles] = useState<SerieMueble[]>([])
+
+    //add first mueble of muebles to firebase, the parent key identifies with id of the moble and child has all the content of the moble
+    const addMuebleToFirebase = async (serieModel: string, imgUrl: string) => {
+        await update(ref(db, '/muebles/' + muebles.length), {
+            id: muebles.length,
+            serie: serieModel,
+        })
+
+        //add a new moble to firebase
+    }
+
+
+    //send to firebase storage even if there are no imports
+const addRenderToStorage = async (file: File) => {
+    const storage = refStorage(getStorage(), 'images/' + file.name);
+    await uploadBytes(storage, file).then((snapshot) => {
+        //get the url of the image
+        getDownloadURL(snapshot.ref).then((url) => {
+            console.log(url)
+            addMuebleToFirebase('Born 120', url)
+
+        })
+        console.log('Uploaded a blob or file!');
+    });
+}
+
+    useEffect(() => {
+        getMueblesFromFirebase().then((data) => {
+            if (data !== null) {
+                setMuebles(data)
+
+                console.log(data[2])
+            }
+        })
+
+
+    }, [])
 
     const [modelsUploadList, setModelsUploadList] = useState<ModeloMueble[]>([{ id: 1, nombre: '', img: null }])
 
-    const setImageToModelsUploadList = (id: number, img: File) => {
-        setModelsUploadList(modelsUploadList.map((model) => {
-            if (model.id === id) {
-                return { ...model, img: img }
-            }
-            return model
-        }))
-    }
+    
 
     return (
         <div className='container'>
             <div>
-                {muebleSerieId !== 0 && muebleModeloId !== 0 && <img src={muebles[muebleSerieId - 1].modelos[muebleModeloId - 1].img} className="img-fluid" alt="moble renderitzat" />}
+                {muebleSerieId !== 0 && muebleModeloId !== 0 && <img src={muebles[muebleSerieId].modelos[muebleModeloId].img?.toString()} className="img-fluid" alt="moble renderitzat" />}
             </div>
             <h1>Admin mobles renderitzats</h1>
             <button className='btn btn-primary m-2' type="button" data-bs-toggle="collapse" data-bs-target="#addCollapse" aria-expanded="false" aria-controls="collapseExample">Afegir un nou moble</button>
@@ -184,7 +211,7 @@ function Admin() {
                             {'Escollir model'}
                         </option>
                         {
-                            muebleSerieId !== 0 && muebles[muebleSerieId - 1].modelos.map((modelo) => {
+                            muebleSerieId !== 0 && muebles[muebleSerieId].modelos?.map((modelo) => {
                                 return <option value={modelo.id}
                                     key={modelo.id}
                                 >
