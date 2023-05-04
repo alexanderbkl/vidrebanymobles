@@ -70,29 +70,44 @@ function Admin() {
     const [muebles, setMuebles] = useState<SerieMueble[]>([])
 
     //add first mueble of muebles to firebase, the parent key identifies with id of the moble and child has all the content of the moble
-    const addMuebleToFirebase = async (serieModel: string, imgUrl: string) => {
+    const addMuebleToFirebase = async (serieModel: string, models: ModeloMueble[]) => {
         await update(ref(db, '/muebles/' + muebles.length), {
             id: muebles.length,
             serie: serieModel,
         })
 
-        //add a new moble to firebase
+        //add all mobles to firebase that are in the models array
+        models.forEach(async model => {
+            await update(ref(db, '/muebles/' + muebles.length + '/modelos/' + model.id), {
+                id: model.id,
+                modelo: model.nombre,
+                img: model.img,
+            })
+        })
     }
 
 
     //send to firebase storage even if there are no imports
-const addRenderToStorage = async (file: File) => {
-    const storage = refStorage(getStorage(), 'images/' + file.name);
-    await uploadBytes(storage, file).then((snapshot) => {
-        //get the url of the image
-        getDownloadURL(snapshot.ref).then((url) => {
-            console.log(url)
-            addMuebleToFirebase('Born 120', url)
+    const addRenderToStorage = async (serie: string, models: ModeloMueble[]) => {
+        models.forEach(async model => {
+            //check if model.img is of type File
+            if (!(model.img instanceof File)) {
+                return
+            }
+            const storage = refStorage(getStorage(), 'images/' + model.img.name);
+            await uploadBytes(storage, model.img).then((snapshot) => {
+                //get the url of the image
+                getDownloadURL(snapshot.ref).then((url) => {
+                    model.img = url
+                })
+                console.log('Uploaded a blob or file!');
+            });
 
-        })
-        console.log('Uploaded a blob or file!');
-    });
-}
+            addMuebleToFirebase(serie, models)
+
+        });
+
+    }
 
     useEffect(() => {
         getMueblesFromFirebase().then((data) => {
@@ -108,7 +123,7 @@ const addRenderToStorage = async (file: File) => {
 
     const [modelsUploadList, setModelsUploadList] = useState<ModeloMueble[]>([{ id: 1, nombre: '', img: null }])
 
-    
+
 
     return (
         <div className='container'>
@@ -124,6 +139,9 @@ const addRenderToStorage = async (file: File) => {
                         setTimeout(async () => {
                             alert(JSON.stringify(values, null, 2));
                             console.log(values)
+
+                            await addRenderToStorage(values.serie, values.models)
+
                             /*await addMuebleToFirebase(values.serie)
                             if (values.image !== null)
                                 await addRenderToStorage(values.image)*/
