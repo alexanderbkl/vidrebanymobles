@@ -1,55 +1,39 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import Born_120_Fresno from './assets/born120/Born120Fresno.jpg'
-import Born_120_Neva from './assets/born120/Born120Neva.jpg'
-import Test_120_Olmo from './assets/born120/Test120Olmo.jpg'
+
 import './App.css'
+import { getMueblesFromFirebase } from './utils/Client'
+import { SerieMueble } from './types'
 
-const muebles = [
-    {
-        id: 1,
-        serie: 'Born 120',
-        modelos: [
-            {
-                id: 1,
-                modelo: 'Fresno',
-                img: Born_120_Fresno,
-            },
-            {
-                id: 2,
-                modelo: 'Neva',
-                img: Born_120_Neva,
-            },
-        ]
-    },
-    {
-        id: 2,
-        serie: 'Test 120',
-        modelos: [
-            {
-                id: 1,
-                modelo: 'Olmo',
-                img: Test_120_Olmo,
-            },
-        ]
-    },
-]
+
 
 
 function App() {
     const [muebleSerieId, setMuebleSerieId] = useState(0)
     const [muebleModeloId, setMuebleModeloId] = useState(0)
+    const [muebles, setMuebles] = useState<SerieMueble[]>([])
 
 
+    useEffect(() => {
+        getMueblesFromFirebase().then((data) => {
+            if (data !== null) {
+                setMuebles(data)
+
+                console.log(data[2])
+            }
+        })
+
+
+    }, [])
 
 
     return (
         <div className='container'>
             <div>
-                {muebleSerieId !== 0 && muebleModeloId !== 0 && <img src={muebles[muebleSerieId - 1].modelos[muebleModeloId - 1].img} className="img-fluid" alt="moble renderitzat" />}
+                {muebleSerieId !== 0 && muebleModeloId !== 0 && <img src={muebles[muebleSerieId].modelos[muebleModeloId].img?.toString()} className="img-fluid" alt="moble renderitzat" />}
             </div>
             <h1>Catàleg de mobles</h1>
-            
+
             <div className="card">
                 <p>Sel·leccionar sèrie:</p>
                 <form>
@@ -84,11 +68,11 @@ function App() {
                             {'Escollir model'}
                         </option>
                         {
-                            muebleSerieId !== 0 && muebles[muebleSerieId - 1].modelos.map((modelo) => {
+                            muebleSerieId !== 0 && muebles[muebleSerieId].modelos.map((modelo) => {
                                 return <option value={modelo.id}
                                     key={modelo.id}
                                 >
-                                    {modelo.modelo}
+                                    {modelo.nombre}
                                 </option>
                             })
                         }

@@ -2,27 +2,17 @@ import { ChangeEvent, useEffect, useState } from 'react'
 import './App.css'
 import { Formik, Field, Form } from 'formik'
 
-import { get, getDatabase, ref, update } from 'firebase/database'
+import { getDatabase, ref, update } from 'firebase/database'
 import { uploadBytes, ref as refStorage, getDownloadURL, getStorage } from "firebase/storage";
 
 import { app } from './firebase'
 import FileUpload from './utils/FileUpload'
 import { ModeloMueble, SerieMueble } from './types'
+import { getMueblesFromFirebase } from './utils/Client';
 
 const db = getDatabase(app)
 
 
-//get all muebles and models from firebase
-const getMueblesFromFirebase = async () => {
-    const mueblesRef = ref(db, '/muebles');
-    const mueblesSnapshot = await get(mueblesRef);
-    if (mueblesSnapshot.exists()) {
-        return mueblesSnapshot.val()
-    } else {
-        console.log("No data available");
-        return null
-    }
-}
 
 
 
@@ -34,7 +24,15 @@ const getMueblesFromFirebase = async () => {
 function Admin() {
     const [muebleSerieId, setMuebleSerieId] = useState(0)
     const [muebleModeloId, setMuebleModeloId] = useState(0)
-    const [muebles, setMuebles] = useState<SerieMueble[]>([])
+    const [muebles, setMuebles] = useState<SerieMueble[]>([{
+        id: 0,
+        serie: '',
+        modelos: [{
+            id: 0,
+            nombre: '',
+            img: null
+        }]
+    }])
 
     //add first mueble of muebles to firebase, the parent key identifies with id of the moble and child has all the content of the moble
     const addMuebleToFirebase = async (serieModel: string, models: ModeloMueble[]) => {
@@ -47,7 +45,7 @@ function Admin() {
         models.forEach(async model => {
             await update(ref(db, '/muebles/' + muebles.length + '/modelos/' + model.id), {
                 id: model.id,
-                modelo: model.nombre,
+                nombre: model.nombre,
                 img: model.img,
             })
         })
@@ -80,13 +78,17 @@ function Admin() {
         getMueblesFromFirebase().then((data) => {
             if (data !== null) {
                 setMuebles(data)
-
-                console.log(data[2])
             }
         })
 
 
     }, [])
+
+
+    useEffect(() => {
+        console.log('muebles changed')
+
+    }, [muebles])
 
     const [modelsUploadList, setModelsUploadList] = useState<ModeloMueble[]>([{ id: 1, nombre: '', img: null }])
 
@@ -105,7 +107,6 @@ function Admin() {
                     onSubmit={(values, { setSubmitting }) => {
                         setTimeout(async () => {
                             alert(JSON.stringify(values, null, 2));
-                            console.log(values)
 
                             await addRenderToStorage(values.serie, values.models)
 
@@ -212,6 +213,44 @@ function Admin() {
                 </p>
 
             </div>
+
+            {muebles.map((mueble) => {
+                return (
+                    <div className="card" key={mueble.id}>
+                        <div className="card-body">
+                            <h5 role="button" data-bs-target={"#model" + mueble.id} data-bs-toggle="collapse" className="card-title">{mueble.serie}</h5>
+                            <div id={"model" + mueble.id} className='collapse'>
+                                <p className="card-text">Models:</p>
+                                <ul className="list-group list-group-flush">
+                                    {mueble.modelos.map((modelo) => {
+                                        return (
+                                            <li className="list-group-item" key={modelo.id}>{modelo.nombre}
+                                                <button type="button" className="btn btn-danger p-2 m-4" onClick={() => {
+
+                                                    deleteRenderFromStorage(mueble.serie, modelo.nombre)
+                                                    const mueblesTemp = muebles.slice(0)
+                                                    
+                                                    delete mueblesTemp[mueble.id].modelos[modelo.id]
+
+                                                    setMuebles(mueblesTemp)
+
+
+
+
+
+                                                }}>🗑️</button>
+                                            </li>
+                                        )
+                                    }
+                                    )}
+                                </ul>
+                                <button type="submit" className="btn btn-primary m-2">Afegir model</button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            })}
+
             <p className="read-the-docs">
                 © Vidre!BANY 2023
             </p>
