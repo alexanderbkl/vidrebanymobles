@@ -1,12 +1,8 @@
-import { ChangeEvent, useEffect, useRef, useState } from 'react'
-
-import Born_120_Fresno from './assets/born120/Born120Fresno.jpg'
-import Born_120_Neva from './assets/born120/Born120Neva.jpg'
-import Test_120_Olmo from './assets/born120/Test120Olmo.jpg'
+import { ChangeEvent, useEffect, useState } from 'react'
 import './App.css'
-import { Formik, Field, Form, useFormikContext, FieldArray } from 'formik'
+import { Formik, Field, Form } from 'formik'
 
-import { get, getDatabase, ref, set, update } from 'firebase/database'
+import { get, getDatabase, ref, update } from 'firebase/database'
 import { uploadBytes, ref as refStorage, getDownloadURL, getStorage } from "firebase/storage";
 
 import { app } from './firebase'
@@ -15,35 +11,6 @@ import { ModeloMueble, SerieMueble } from './types'
 
 const db = getDatabase(app)
 
-const muebles2 = [
-    {
-        id: 1,
-        serie: 'Born 120',
-        modelos: [
-            {
-                id: 1,
-                modelo: 'Fresno',
-                img: Born_120_Fresno,
-            },
-            {
-                id: 2,
-                modelo: 'Neva',
-                img: Born_120_Neva,
-            },
-        ]
-    },
-    {
-        id: 2,
-        serie: 'Test 120',
-        modelos: [
-            {
-                id: 1,
-                modelo: 'Olmo',
-                img: Test_120_Olmo,
-            },
-        ]
-    },
-]
 
 //get all muebles and models from firebase
 const getMueblesFromFirebase = async () => {
@@ -134,7 +101,7 @@ function Admin() {
             <button className='btn btn-primary m-2' type="button" data-bs-toggle="collapse" data-bs-target="#addCollapse" aria-expanded="false" aria-controls="collapseExample">Afegir un nou moble</button>
             <div className="collapse" id="addCollapse">
                 <Formik
-                    initialValues={{ serie: '', models: [modelsUploadList], }}
+                    initialValues={{ serie: '', models: modelsUploadList, }}
                     onSubmit={(values, { setSubmitting }) => {
                         setTimeout(async () => {
                             alert(JSON.stringify(values, null, 2));
@@ -233,7 +200,7 @@ function Admin() {
                                 return <option value={modelo.id}
                                     key={modelo.id}
                                 >
-                                    {modelo.modelo}
+                                    {modelo.nombre}
                                 </option>
                             })
                         }

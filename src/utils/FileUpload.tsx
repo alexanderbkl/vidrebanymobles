@@ -1,6 +1,5 @@
 import { ChangeEvent, useState } from "react";
-import { Field, useFormikContext, FormikState } from 'formik'
-import { ModeloMueble } from "../types";
+import { Field, useFormikContext } from 'formik'
 const FileUpload = (props: { field: typeof Field; modelId: number; values: any }) => {
     const [imgSize, setImgSize] = useState(0);
     const { field } = props;
