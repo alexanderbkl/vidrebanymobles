@@ -227,7 +227,7 @@ function Admin() {
                                             <li className="list-group-item" key={modelo.id}>{modelo.nombre}
                                                 <button type="button" className="btn btn-danger p-2 m-4" onClick={() => {
 
-                                                    deleteRenderFromStorage(mueble.serie, modelo.nombre)
+                                                    //deleteRenderFromStorage(mueble.serie, modelo.nombre)
                                                     const mueblesTemp = muebles.slice(0)
                                                     
                                                     delete mueblesTemp[mueble.id].modelos[modelo.id]
