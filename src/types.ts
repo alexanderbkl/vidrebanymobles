@@ -5,7 +5,7 @@ export interface ModeloMueble {
 }
 
 export interface SerieMueble {
-    id: number;
+    id: string|number;
     serie: string;
     modelos: ModeloMueble[];
 }
