@@ -35,20 +35,19 @@ function Admin() {
     }])
 
     //add first mueble of muebles to firebase, the parent key identifies with id of the moble and child has all the content of the moble
-    const addMuebleToFirebase = async (serieModel: string, models: ModeloMueble[]) => {
+    const addMuebleToFirebase = async (serieModel: string, model: ModeloMueble) => {
         await update(ref(db, '/muebles/' + muebles.length), {
             id: muebles.length,
             serie: serieModel,
         })
 
         //add all mobles to firebase that are in the models array
-        models.forEach(async model => {
-            await update(ref(db, '/muebles/' + muebles.length + '/modelos/' + model.id), {
-                id: model.id,
-                nombre: model.nombre,
-                img: model.img,
-            })
+        await update(ref(db, '/muebles/' + muebles.length + '/modelos/' + model.id), {
+            id: model.id,
+            nombre: model.nombre,
+            img: model.img,
         })
+
     }
 
 
@@ -64,11 +63,12 @@ function Admin() {
                 //get the url of the image
                 getDownloadURL(snapshot.ref).then((url) => {
                     model.img = url
+                    addMuebleToFirebase(serie, model)
                 })
                 console.log('Uploaded a blob or file!');
             });
 
-            addMuebleToFirebase(serie, models)
+            //TODO fix url is being sent only on the last model
 
         });
 
@@ -179,9 +179,7 @@ function Admin() {
                         setTimeout(async () => {
                             alert(JSON.stringify(values, null, 2));
 
-                            await addRendersToStorage(values.serie, values.models).then(() => {
-                                addMuebleToFirebase(values.serie, values.models)
-                            })
+                            await addRendersToStorage(values.serie, values.models)
 
                             /*await addMuebleToFirebase(values.serie)
                             if (values.image !== null)
@@ -272,7 +270,7 @@ function Admin() {
                         >
                             {'Escollir model'}
                         </option>
-                    
+
                         {
                             muebleSerieId !== 0 && Object.keys(muebles[muebleSerieId].modelos)?.map((modeloKey) => {
                                 const modelo = muebles[muebleSerieId].modelos[modeloKey as unknown as number]
