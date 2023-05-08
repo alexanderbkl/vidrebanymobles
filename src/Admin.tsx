@@ -1,7 +1,6 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import './App.css'
 import { Formik, Field, Form } from 'formik'
-
 import { getDatabase, ref, update, remove, push } from 'firebase/database'
 import { uploadBytes, ref as refStorage, getDownloadURL, getStorage, deleteObject } from "firebase/storage";
 
@@ -15,6 +14,7 @@ const db = getDatabase(app)
 
 
 
+//TODO push instead of numeric key
 
 
 
@@ -68,7 +68,6 @@ function Admin() {
                 console.log('Uploaded a blob or file!');
             });
 
-            //TODO fix url is being sent only on the last model
 
         });
 
@@ -329,27 +328,31 @@ function Admin() {
                                             Object.keys(mueble.modelos).map((modelKey: string) => {
                                                 const modelo = mueble.modelos[modelKey as unknown as number]
                                                 return (
-                                                    <li className="list-group-item" key={modelo.id}>{modelo.nombre}
-                                                        <button type="button" className="btn btn-danger p-2 m-4" onClick={() => {
-                                                            if (modelo.img !== null && !(modelo.img instanceof File))
-                                                                deleteRenderFromStorage(modelo.img).then(() => {
-                                                                    //delete from firebase
-                                                                    deleteModelFromFirebase(mueble.id, modelo.id).then(() => {
-                                                                        console.log("deleted model from firebase")
+                                                    <li className="list-group-item" key={modelo.id}>
+                                                        <p>
+                                                            {modelo.nombre}
+                                                        </p>
+                                                        <img width={200} src={modelo.img !== null && !(modelo.img instanceof File) ? modelo.img : ''} alt="model" className="img-thumbnail" />
+                                                        <div>
+                                                            <button type="button" className="btn btn-secondary w-25 p-2 m-4">✏️</button>
+                                                            <button type="button" className="btn btn-danger w-25 p-2 m-4" onClick={() => {
+                                                                if (modelo.img !== null && !(modelo.img instanceof File))
+                                                                    deleteRenderFromStorage(modelo.img).then(() => {
+                                                                        //delete from firebase
+                                                                        deleteModelFromFirebase(mueble.id, modelo.id).then(() => {
+                                                                            console.log("deleted model from firebase")
+                                                                        })
                                                                     })
-                                                                })
-                                                            const mueblesTemp = muebles.slice(0)
+                                                                const mueblesTemp = muebles.slice(0)
 
-                                                            delete mueblesTemp[mueble.id].modelos[modelo.id as unknown as number]
+                                                                delete mueblesTemp[mueble.id].modelos[modelo.id as unknown as number]
 
-                                                            setMuebles(mueblesTemp)
+                                                                setMuebles(mueblesTemp)
 
-
-
-
-
-                                                        }}>🗑️</button>
+                                                            }}>🗑️</button>
+                                                        </div>
                                                     </li>
+
                                                 )
                                             })}
                                 </ul>
@@ -371,9 +374,12 @@ function Admin() {
                                                     mueblesTemp[mueble.id].modelos[modelId as unknown as number] = { id: modelId as unknown as number, nombre: values.nombre, img: values.img }
                                                     setMuebles(mueblesTemp)
                                                     setSubmitting(false)
+                                                    document.getElementById("addModel" + mueble.id)?.classList.remove("show")
+
                                                 })
                                             } else {
                                                 alert("Selecciona una imatge")
+                                                document.getElementById("addModel" + mueble.id)?.classList.remove("show")
                                                 setSubmitting(false)
                                             }
 
@@ -391,7 +397,7 @@ function Admin() {
                                                     }} />
 
 
-                                                    <button type="submit" className="btn btn-primary mt-3" disabled={isSubmitting}>Afegir model</button>
+                                                    <button type="submit" className="btn btn-primary mt-3" disabled={isSubmitting}>Afegir</button>
                                                     <button type="button" className="btn btn-secondary mt-3" onClick={() => {
                                                         setFieldValue("nombre", "")
                                                         setFieldValue("img", null)
