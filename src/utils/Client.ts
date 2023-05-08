@@ -1,4 +1,4 @@
-import { get, getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, onValue } from "firebase/database";
 import { app } from "../firebase";
 import { SerieMueble } from "../types";
 

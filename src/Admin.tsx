@@ -2,7 +2,7 @@ import { ChangeEvent, useEffect, useState } from 'react'
 import './App.css'
 import { Formik, Field, Form } from 'formik'
 
-import { getDatabase, ref, update, remove, onValue, push } from 'firebase/database'
+import { getDatabase, ref, update, remove, push } from 'firebase/database'
 import { uploadBytes, ref as refStorage, getDownloadURL, getStorage, deleteObject } from "firebase/storage";
 
 import { app } from './firebase'
@@ -23,7 +23,7 @@ const db = getDatabase(app)
 
 function Admin() {
     const [muebleSerieId, setMuebleSerieId] = useState(0)
-    const [muebleModeloId, setMuebleModeloId] = useState(0)
+    const [muebleModeloId, setMuebleModeloId] = useState('')
     const [muebles, setMuebles] = useState<SerieMueble[]>([{
         id: 0,
         serie: '',
@@ -53,9 +53,8 @@ function Admin() {
 
 
     //send to firebase storage even if there are no imports
-    const addRenderToStorage = async (serie: string, models: ModeloMueble[]) => {
-        const modelsTemp = models.slice(0)
-        modelsTemp.forEach(async model => {
+    const addRendersToStorage = async (serie: string, models: ModeloMueble[]) => {
+        models.forEach(async model => {
             //check if model.img is of type File
             if (!(model.img instanceof File)) {
                 return
@@ -69,12 +68,33 @@ function Admin() {
                 console.log('Uploaded a blob or file!');
             });
 
+            addMuebleToFirebase(serie, models)
 
         });
 
-        return modelsTemp
+    }
+
+    //send a single render to firebase storage and return the url
+    const addRenderToStorage = async (model: ModeloMueble) => {
+        //check if model.img is of type File
+        if (!(model.img instanceof File)) {
+            return
+        }
+        let url = ''
+        const storage = refStorage(getStorage(), 'images/' + model.img.name);
+        const snapshot = await uploadBytes(storage, model.img)
+
+        url = await getDownloadURL(snapshot.ref)
+
+
+        model.img = url
+
+        console.log(url)
+
+        return url
 
     }
+
 
     useEffect(() => {
         getMueblesFromFirebase().then((data) => {
@@ -103,7 +123,7 @@ function Admin() {
         });
     }
 
-    const deleteModelFromFirebase = async (serieId: number, modelId: number) => {
+    const deleteModelFromFirebase = async (serieId: number | string, modelId: number | string) => {
         await remove(ref(db, '/muebles/' + serieId + '/modelos/' + modelId))
     }
 
@@ -115,21 +135,25 @@ function Admin() {
         }
 
         //upload image to firebase storage
-        const models: ModeloMueble[] = [{
+        const model: ModeloMueble = {
             id: newModelKey,
             nombre: nombre,
             img: img
-        }]
+        }
 
-        const modelsTemp = await addRenderToStorage(serieId.toString(), models)
-        console.log(modelsTemp[0])
+        const url = await addRenderToStorage(model)
+
+
 
         //add model to firebase
-        if (modelsTemp[0].img !== null) {
-            console.log(modelsTemp[0].img)
+        if (model.img !== null) {
+            console.log(url)
             await update(ref(db, '/muebles/' + serieId + '/modelos/' + newModelKey),
-            modelsTemp[0]
-            )
+                {
+                    id: newModelKey,
+                    nombre: nombre,
+                    img: url
+                })
         }
 
 
@@ -142,8 +166,9 @@ function Admin() {
 
     return (
         <div className='container'>
+            <p>{muebleModeloId}</p>
             <div>
-                {muebleSerieId !== 0 && muebleModeloId !== 0 && <img src={muebles[muebleSerieId].modelos[muebleModeloId].img?.toString()} className="img-fluid" alt="moble renderitzat" />}
+                {muebleSerieId !== 0 && muebleModeloId !== '0' && <img src={muebles[muebleSerieId].modelos[muebleModeloId as unknown as number].img?.toString()} className="img-fluid" alt="moble renderitzat" />}
             </div>
             <h1>Admin mobles renderitzats</h1>
             <button className='btn btn-primary m-2' type="button" data-bs-toggle="collapse" data-bs-target="#addCollapse" aria-expanded="false" aria-controls="collapseExample">Afegir un nou moble</button>
@@ -154,7 +179,7 @@ function Admin() {
                         setTimeout(async () => {
                             alert(JSON.stringify(values, null, 2));
 
-                            await addRenderToStorage(values.serie, values.models).then(() => {
+                            await addRendersToStorage(values.serie, values.models).then(() => {
                                 addMuebleToFirebase(values.serie, values.models)
                             })
 
@@ -178,6 +203,9 @@ function Admin() {
                                         <div className=''>
                                             <Field name="model" type="text" className="form-control m-2" placeholder="Model" onChange={(e: ChangeEvent<HTMLFormElement>) => {
                                                 const newModels = [...modelsUploadList]
+                                                if (typeof model.id !== 'number') {
+                                                    return
+                                                }
                                                 newModels[model.id - 1].nombre = e.target.value
                                                 setModelsUploadList(newModels)
                                                 setFieldValue('models', newModels)
@@ -216,7 +244,7 @@ function Admin() {
                 <form>
                     <select onChange={(e) => {
                         setMuebleSerieId(parseInt(e.target.value))
-                        setMuebleModeloId(0)
+                        setMuebleModeloId('0')
                     }}
                         className="form-select"
                         aria-label="Default select example">
@@ -238,14 +266,16 @@ function Admin() {
                 </form>
                 <p>Seleccionar model:</p>
                 <form>
-                    <select value={muebleModeloId} onChange={(e) => { setMuebleModeloId(parseInt(e.target.value)); console.log("serie id: " + muebleSerieId + " modelo id: " + muebleModeloId) }} className="form-select" aria-label="Default select example">
+                    <select value={muebleModeloId} onChange={(e) => { setMuebleModeloId(e.target.value); console.log("serie id: " + muebleSerieId + " modelo id: " + muebleModeloId) }} className="form-select" aria-label="Default select example">
                         <option value={0}
                             key={0}
                         >
                             {'Escollir model'}
                         </option>
+                    
                         {
-                            muebleSerieId !== 0 && muebles[muebleSerieId].modelos?.map((modelo) => {
+                            muebleSerieId !== 0 && Object.keys(muebles[muebleSerieId].modelos)?.map((modeloKey) => {
+                                const modelo = muebles[muebleSerieId].modelos[modeloKey as unknown as number]
                                 return <option value={modelo.id}
                                     key={modelo.id}
                                 >
@@ -277,13 +307,14 @@ function Admin() {
                                                     if (modelo.img !== null && !(modelo.img instanceof File))
                                                         deleteRenderFromStorage(modelo.img).then(() => {
                                                             //delete from firebase
-                                                            deleteModelFromFirebase(mueble.id, modelo.id).then(() => {
-                                                                console.log("deleted model from firebase")
-                                                            })
+                                                            if (modelo.id !== undefined && mueble.id !== undefined)
+                                                                deleteModelFromFirebase(mueble.id, modelo.id).then(() => {
+                                                                    console.log("deleted model from firebase")
+                                                                })
                                                         })
                                                     const mueblesTemp = muebles.slice(0)
 
-                                                    delete mueblesTemp[mueble.id].modelos[modelo.id]
+                                                    delete mueblesTemp[mueble.id].modelos[modelo.id as unknown as number]
 
                                                     setMuebles(mueblesTemp)
 
@@ -311,7 +342,7 @@ function Admin() {
                                                                 })
                                                             const mueblesTemp = muebles.slice(0)
 
-                                                            delete mueblesTemp[mueble.id].modelos[modelo.id]
+                                                            delete mueblesTemp[mueble.id].modelos[modelo.id as unknown as number]
 
                                                             setMuebles(mueblesTemp)
 
@@ -339,7 +370,7 @@ function Admin() {
                                                     const mueblesTemp = muebles.slice(0)
                                                     if (mueblesTemp[mueble.id].modelos === undefined)
                                                         mueblesTemp[mueble.id].modelos = []
-                                                    mueblesTemp[mueble.id].modelos[modelId] = { id: modelId, nombre: values.nombre, img: values.img }
+                                                    mueblesTemp[mueble.id].modelos[modelId as unknown as number] = { id: modelId as unknown as number, nombre: values.nombre, img: values.img }
                                                     setMuebles(mueblesTemp)
                                                     setSubmitting(false)
                                                 })
@@ -350,7 +381,7 @@ function Admin() {
 
                                         }}
                                     >
-                                        {({ isSubmitting, setFieldValue, setSubmitting, values }) => (
+                                        {({ isSubmitting, setFieldValue, setSubmitting }) => (
                                             <Form>
                                                 <div className="form-group">
                                                     <label htmlFor="nombre">Nom del model</label>
