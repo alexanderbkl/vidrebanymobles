@@ -167,7 +167,8 @@ function Admin() {
         <div className='container'>
             <p>{muebleModeloId}</p>
             <div>
-                {muebleSerieId !== 0 && muebleModeloId !== '0' && <img src={muebles[muebleSerieId].modelos[muebleModeloId as unknown as number].img?.toString()} className="img-fluid" alt="moble renderitzat" />}
+                {muebleSerieId !== 0 && muebleModeloId !== '0' &&
+                    <img src={muebles[muebleSerieId].modelos[muebleModeloId as unknown as number].img?.toString()} className="img-fluid" alt="moble renderitzat" />}
             </div>
             <h1>Admin mobles renderitzats</h1>
             <button className='btn btn-primary m-2' type="button" data-bs-toggle="collapse" data-bs-target="#addCollapse" aria-expanded="false" aria-controls="collapseExample">Afegir un nou moble</button>
@@ -293,6 +294,28 @@ function Admin() {
                 return (
                     <div className="card " key={mueble.id}>
                         <div className="card-body">
+                            <button type="button" className="btn btn-secondary p-2 m-4">✏️</button>
+                            <button type="button" className="btn btn-danger p-2 m-4" data-bs-toggle="modal" data-bs-target="#deleteSerieModal" onClick={(() => {
+                                //toggle the modal
+
+                            })}>🗑️</button>
+                            <div id="deleteSerieModal" className="modal" tabIndex={-1}>
+                                <div className="modal-dialog">
+                                    <div className="modal-content">
+                                        <div className="modal-header">
+                                            <h5 className="modal-title">Modal title</h5>
+                                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div className="modal-body">
+                                            <p>Modal body text goes here.</p>
+                                        </div>
+                                        <div className="modal-footer">
+                                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <button type="button" className="btn btn-primary">Save changes</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <h5 role="button" data-bs-target={"#model" + mueble.id} data-bs-toggle="collapse" className="card-title">{mueble.serie}</h5>
                             <div id={"model" + mueble.id} className='collapse'>
                                 <p className="card-text">Models:</p>
@@ -314,10 +337,6 @@ function Admin() {
                                                     delete mueblesTemp[mueble.id].modelos[modelo.id as unknown as number]
 
                                                     setMuebles(mueblesTemp)
-
-
-
-
 
                                                 }}>🗑️</button>
                                             </li>

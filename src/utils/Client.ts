@@ -13,7 +13,6 @@ export const getMueblesFromFirebase = async () => {
         onValue(mueblesRef, (snapshot) => {
             const data = snapshot.val();
             if (snapshot.exists()) {
-                console.log(data)
                 res(data)
             } else {
                 console.log("No data available");

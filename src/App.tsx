@@ -10,7 +10,7 @@ import { SerieMueble } from './types'
 
 function App() {
     const [muebleSerieId, setMuebleSerieId] = useState(0)
-    const [muebleModeloId, setMuebleModeloId] = useState(0)
+    const [muebleModeloId, setMuebleModeloId] = useState('')
     const [muebles, setMuebles] = useState<SerieMueble[]>([])
 
 
@@ -30,7 +30,8 @@ function App() {
     return (
         <div className='container'>
             <div>
-                {muebleSerieId !== 0 && muebleModeloId !== 0 && <img src={muebles[muebleSerieId].modelos[muebleModeloId].img?.toString()} className="img-fluid" alt="moble renderitzat" />}
+                {muebleSerieId !== 0 && muebleModeloId !== '0' &&
+                    <img src={muebles[muebleSerieId].modelos[muebleModeloId as unknown as number].img?.toString()} className="img-fluid" alt="moble renderitzat" />}
             </div>
             <h1>Catàleg de mobles</h1>
 
@@ -39,7 +40,7 @@ function App() {
                 <form>
                     <select onChange={(e) => {
                         setMuebleSerieId(parseInt(e.target.value))
-                        setMuebleModeloId(0)
+                        setMuebleModeloId('0')
                     }}
                         className="form-select"
                         aria-label="Default select example">
@@ -61,14 +62,15 @@ function App() {
                 </form>
                 <p>Sel·leccionar model:</p>
                 <form>
-                    <select value={muebleModeloId} onChange={(e) => { setMuebleModeloId(parseInt(e.target.value)); console.log("serie id: " + muebleSerieId + " modelo id: " + muebleModeloId) }} className="form-select" aria-label="Default select example">
+                    <select value={muebleModeloId} onChange={(e) => { setMuebleModeloId(e.target.value); console.log("serie id: " + muebleSerieId + " modelo id: " + muebleModeloId) }} className="form-select" aria-label="Default select example">
                         <option value={0}
                             key={0}
                         >
                             {'Escollir model'}
                         </option>
                         {
-                            muebleSerieId !== 0 && muebles[muebleSerieId].modelos.map((modelo) => {
+                            muebleSerieId !== 0 && Object.keys(muebles[muebleSerieId].modelos)?.map((modeloKey) => {
+                                const modelo = muebles[muebleSerieId].modelos[modeloKey as unknown as number]
                                 return <option value={modelo.id}
                                     key={modelo.id}
                                 >
