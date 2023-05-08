@@ -1,7 +1,7 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import './App.css'
 import { Formik, Field, Form } from 'formik'
-import { getDatabase, ref, update, remove, push, refFromURL } from 'firebase/database'
+import { getDatabase, ref, update, remove, push } from 'firebase/database'
 import { uploadBytes, ref as refStorage, getDownloadURL, getStorage, deleteObject } from "firebase/storage";
 
 import { app } from './firebase'
@@ -15,16 +15,8 @@ const db = getDatabase(app)
 
 
 
-//TODO push instead of numeric key
-
-
-
-
-
 
 function Admin() {
-    const [muebleSerieId, setMuebleSerieId] = useState(0)
-    const [muebleModeloId, setMuebleModeloId] = useState('')
     const [muebles, setMuebles] = useState<SerieMueble[]>([{
         id: 0,
         serie: '',
@@ -37,7 +29,7 @@ function Admin() {
 
     //add first mueble of muebles to firebase, the parent key identifies with id of the moble and child has all the content of the moble
     const addMuebleToFirebase = async (serieModel: string, model: ModeloMueble) => {
-console.log(1)
+        console.log(1)
         //push new mueble to firebase get key
         const newMuebleKey = await push(ref(db, '/muebles/')).key
         console.log(newMuebleKey)
@@ -60,10 +52,10 @@ console.log(1)
         console.log(2)
 
         const data = await getMueblesFromFirebase()
-                            if (data !== null) {
-                                setMuebles(data)
-                            }
-                            console.log(3)
+        if (data !== null) {
+            setMuebles(data)
+        }
+        console.log(3)
 
     }
 
@@ -85,7 +77,7 @@ console.log(1)
 
         });
 
-        
+
 
     }
 
@@ -207,11 +199,6 @@ console.log(1)
 
     return (
         <div className='container'>
-            <p>{muebleModeloId}</p>
-            <div>
-                {muebleSerieId !== 0 && muebleModeloId !== '0' &&
-                    <img src={muebles[muebleSerieId].modelos[muebleModeloId as unknown as number].img?.toString()} className="img-fluid" alt="moble renderitzat" />}
-            </div>
             <h1>Admin mobles renderitzats</h1>
             <button className='btn btn-primary m-2' type="button" data-bs-toggle="collapse" data-bs-target="#addCollapse" aria-expanded="false" aria-controls="collapseExample">Afegir un nou moble</button>
             <div className="collapse" id="addCollapse">
@@ -221,11 +208,11 @@ console.log(1)
                         setTimeout(async () => {
 
                             await addRendersToStorage(values.serie, values.models)
-                            
+
                             //set field values to initial values
                             setFieldValue('serie', '')
                             setFieldValue('models', [{ id: 1, nombre: '', img: null }])
-                            
+
 
                             setSubmitting(false);
                         }, 400);
@@ -280,7 +267,7 @@ console.log(1)
                         </Form>)}
                 </Formik>
             </div>
-            
+
 
             {
                 Object.keys(muebles).length !== 0 &&
@@ -368,7 +355,7 @@ console.log(1)
                                                 console.log(values)
                                                 setSubmitting(false)
                                                 if (values.img != null) {
-                                                    addModelToFirebase(mueble.id, values.nombre, values.img).then((modelId) => {
+                                                    addModelToFirebase(mueble.id, values.nombre, values.img).then(() => {
                                                         getMueblesFromFirebase().then((data) => {
                                                             if (data !== null) {
                                                                 setMuebles(data)
