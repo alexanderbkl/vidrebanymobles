@@ -1,16 +1,28 @@
-import { get, getDatabase, ref } from "firebase/database";
+import { get, getDatabase, ref, onValue } from "firebase/database";
 import { app } from "../firebase";
+import { SerieMueble } from "../types";
 
 const db = getDatabase(app)
 
 
 export const getMueblesFromFirebase = async () => {
     const mueblesRef = ref(db, '/muebles');
-    const mueblesSnapshot = await get(mueblesRef);
-    if (mueblesSnapshot.exists()) {
-        return mueblesSnapshot.val()
-    } else {
-        console.log("No data available");
-        return null
-    }
+
+    const dataFinal: SerieMueble[] = await new Promise((res) => {
+
+        onValue(mueblesRef, (snapshot) => {
+            const data = snapshot.val();
+            if (snapshot.exists()) {
+                console.log(data)
+                res(data)
+            } else {
+                console.log("No data available");
+                res([])
+            }
+        });
+
+
+    }) 
+    return dataFinal
+    
 }

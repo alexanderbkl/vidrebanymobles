@@ -1,5 +1,5 @@
 export interface ModeloMueble {
-    id: number;
+    id: number|string;
     nombre: string;
     img: File|string|null;
 }
