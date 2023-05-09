@@ -12,8 +12,8 @@ import DeleteModal from './components/DeleteModal';
 
 const db = getDatabase(app)
 
-
-
+//TODO fix uploading new mueble error that it uploads for each model a new series
+//TODO add functionality to the edit model and edit serie buttons
 
 
 function Admin() {
@@ -28,18 +28,9 @@ function Admin() {
     }])
 
     //add first mueble of muebles to firebase, the parent key identifies with id of the moble and child has all the content of the moble
-    const addMuebleToFirebase = async (serieModel: string, model: ModeloMueble) => {
-        console.log(1)
+    const addMuebleToFirebase = async (model: ModeloMueble, newMuebleKey: string | null) => {
         //push new mueble to firebase get key
-        const newMuebleKey = await push(ref(db, '/muebles/')).key
-        console.log(newMuebleKey)
-        console.log(serieModel)
-        console.log(model)
 
-        await update(ref(db, '/muebles/' + newMuebleKey), {
-            id: newMuebleKey,
-            serie: serieModel,
-        })
 
         //add all mobles to firebase that are in the models array
         const newModelKey = await push(ref(db, '/muebles/' + newMuebleKey + '/modelos/')).key
@@ -62,6 +53,14 @@ function Admin() {
 
     //send to firebase storage even if there are no imports
     const addRendersToStorage = async (serie: string, models: ModeloMueble[]) => {
+        const newMuebleKey = await push(ref(db, '/muebles/')).key
+
+
+        await update(ref(db, '/muebles/' + newMuebleKey), {
+            id: newMuebleKey,
+            serie: serie,
+        })
+
         models.forEach(async model => {
             //check if model.img is of type File
             if (!(model.img instanceof File)) {
@@ -72,7 +71,7 @@ function Admin() {
             //get the url of the image
             const url = await getDownloadURL(snapshot.ref)
             model.img = url
-            await addMuebleToFirebase(serie, model)
+            await addMuebleToFirebase(model, newMuebleKey)
             console.log('Uploaded a blob or file!');
 
         });
@@ -178,15 +177,20 @@ function Admin() {
 
     const deleteMueble = async (serieId: number | string) => {
         //remove all models from firebase storage first
-        Object.keys(muebles[serieId as number].modelos).forEach(async modelKey => {
-            const model = muebles[serieId as number].modelos[modelKey as unknown as number]
-            if (model.img instanceof File) {
-                return
-            }
-            await deleteRenderFromStorage(model.img).catch((error) => {
-                console.log('Uh-oh, an error occurred!: ' + error);
+        try {
+            Object.keys(muebles[serieId as number].modelos).forEach(async modelKey => {
+                const model = muebles[serieId as number].modelos[modelKey as unknown as number]
+                if (model.img instanceof File) {
+                    return
+                }
+                await deleteRenderFromStorage(model.img).catch((error) => {
+                    console.log('Uh-oh, an error occurred!: ' + error);
+                })
             })
-        })
+        } catch (error) {
+            console.log(error)
+        }
+
         //remove mueble from firebase
         await remove(ref(db, '/muebles/' + serieId))
         //remove mueble from state (using Object)
@@ -229,7 +233,7 @@ function Admin() {
                                 return (
                                     <div className='d-flex flex-direction-column align-items-center justify-content-center' key={model.id}>
                                         <div className=''>
-                                            <Field name="model" type="text" className="form-control m-2" placeholder="Model" onChange={(e: ChangeEvent<HTMLFormElement>) => {
+                                            <Field name="model" type="text" className="form-control m-2" placeholder="Nom del model" onChange={(e: ChangeEvent<HTMLFormElement>) => {
                                                 const newModels = [...modelsUploadList]
                                                 if (typeof model.id !== 'number') {
                                                     return
@@ -252,7 +256,7 @@ function Admin() {
                                             <button type="button" className="btn btn-danger p-2 m-4" onClick={() => {
                                                 setModelsUploadList(modelsUploadList.filter((modela) => modela.id !== model.id))
                                                 setFieldValue('models', modelsUploadList.filter((modela) => modela.id !== model.id))
-                                            }}>🗑️</button>
+                                            }}>❌</button>
                                         </div>
                                     </div>
                                 )
@@ -276,7 +280,7 @@ function Admin() {
                     return (
                         <div className="card " key={mueble.id}>
                             <div className="card-body">
-                                <button type="button" className="btn btn-secondary p-2 m-4">✏️</button>
+                                {/*<button type="button" className="btn btn-secondary p-2 m-4">✏️</button>*/}
                                 <button type="button" className="btn btn-danger p-2 m-4" data-bs-toggle="modal" data-bs-target={"#deleteSerieModal" + mueble.id} onClick={(() => {
                                     //toggle the modal
 
@@ -322,7 +326,7 @@ function Admin() {
                                                             </p>
                                                             <img width={200} src={modelo.img !== null && !(modelo.img instanceof File) ? modelo.img : ''} alt="model" className="img-thumbnail" />
                                                             <div>
-                                                                <button type="button" className="btn btn-secondary w-25 p-2 m-4">✏️</button>
+                                                                {/*<button type="button" className="btn btn-secondary w-25 p-2 m-4">✏️</button>*/}
                                                                 <button type="button" className="btn btn-danger w-25 p-2 m-4" onClick={() => {
                                                                     if (modelo.img !== null && !(modelo.img instanceof File))
                                                                         deleteRenderFromStorage(modelo.img).then(() => {
