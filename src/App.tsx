@@ -11,7 +11,11 @@ import { SerieMueble } from './types'
 function App() {
     const [muebleSerieId, setMuebleSerieId] = useState('0')
     const [muebleModeloId, setMuebleModeloId] = useState('0')
-    const [muebles, setMuebles] = useState<SerieMueble[]>([])
+    const [muebles, setMuebles] = useState<SerieMueble>({
+        id: 0,
+        modelos: [],
+        serie: ''
+    })
 
 
     useEffect(() => {
