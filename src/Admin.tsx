@@ -9,6 +9,7 @@ import FileUpload from './utils/FileUpload'
 import { ModeloMueble, SerieMueble } from './types'
 import { getMueblesFromFirebase } from './utils/Client';
 import DeleteModal from './components/DeleteModal';
+import { Link } from 'react-router-dom';
 
 const db = getDatabase(app)
 
@@ -204,6 +205,7 @@ function Admin() {
     return (
         <div className='container'>
             <h1>Admin mobles renderitzats</h1>
+            <Link to='/' className='btn btn-primary m-2'>Tornar a la pàgina principal</Link>
             <button className='btn btn-primary m-2' type="button" data-bs-toggle="collapse" data-bs-target="#addCollapse" aria-expanded="false" aria-controls="collapseExample">Afegir un nou moble</button>
             <div className="collapse" id="addCollapse">
                 <Formik
