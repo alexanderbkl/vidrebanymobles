@@ -8,7 +8,7 @@ const db = getDatabase(app)
 export const getMueblesFromFirebase = async () => {
     const mueblesRef = ref(db, '/muebles');
 
-    const dataFinal: SerieMueble = await new Promise((res) => {
+    const dataFinal: SerieMueble[] = await new Promise((res) => {
 
         onValue(mueblesRef, (snapshot) => {
             const data = snapshot.val();
@@ -16,11 +16,11 @@ export const getMueblesFromFirebase = async () => {
                 res(data)
             } else {
                 console.log("No data available");
-                res({
+                res([{
                     id: 0,
                     serie: '',
                     modelos: []
-                })
+                }])
             }
         });
 

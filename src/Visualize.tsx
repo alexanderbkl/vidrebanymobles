@@ -9,11 +9,11 @@ import './App.css'
 const Visualize = () => {
     const navigate = useNavigate()
 
-    const [muebles, setMuebles] = useState<SerieMueble>({
+    const [muebles, setMuebles] = useState<SerieMueble[]>([{
         id: 0,
         modelos: [],
         serie: ''
-    })
+    }])
 
     useEffect(() => {
         getMueblesFromFirebase().then((data) => {
