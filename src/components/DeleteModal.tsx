@@ -1,14 +1,14 @@
-const DeleteModal = (props: { muebleId: string|number; onDelete: (muebleId: string|number) => void}) => {
-    const muebleId: string|number = props.muebleId;
-    const onDelete: (muebleId: string|number) => void = props.onDelete;
+const DeleteModal = (props: { muebleId: string | number; onDelete: (muebleId: string | number) => void }) => {
+    const muebleId: string | number = props.muebleId;
+    const onDelete: (muebleId: string | number) => void = props.onDelete;
 
     const handleConfirmDelete = () => {
         onDelete(muebleId);
-      };
+    };
 
 
     return (
-        <div id={"deleteSerieModal"+muebleId} className="modal" tabIndex={-1}>
+        <div id={"deleteSerieModal" + muebleId} className="modal" tabIndex={-1}>
             <div className="modal-dialog">
                 <div className="modal-content">
                     <div className="modal-header">
