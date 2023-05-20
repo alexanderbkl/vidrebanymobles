@@ -43,8 +43,10 @@ const Models = () => {
 
 
             <div className='container'>
+                
                 <div className="row">
-                    <h1>Catàleg de mobles</h1>
+
+                    <h1>Catàleg de models</h1>
 
                     <div className="col-sm-6 card">
                         {muebleSerieId !== '0' && muebleModeloId !== '0' &&
@@ -61,12 +63,10 @@ const Models = () => {
                                 }
                                 link.click();
                             }}>Descarregar imatge</button>}
-
                     </div>
 
                     <div className="col-sm-6 card">
-
-
+                        <b>{muebles[muebleSerieId as unknown as number]?.serie}</b>
                         <p>
                             Sel·leccionar sèrie i model del <code>moble renderitzat</code>.
                         </p>
